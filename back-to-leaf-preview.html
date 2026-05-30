@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Back to Leaf - Pet Memory Companion</title>
+  <style>
+    :root {
+      --bg: #f7efe5;
+      --card: rgba(255, 252, 247, 0.9);
+      --ink: #3b2f2f;
+      --muted: #8a7468;
+      --accent: #8fc7c3;
+      --accent-dark: #4f918d;
+      --gold: #d8a85a;
+      --rose: #e9b9a8;
+      --shadow: 0 20px 50px rgba(74, 54, 40, 0.14);
+      --radius: 28px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at top left, #ffe5d6 0, transparent 34%),
+        radial-gradient(circle at bottom right, #bfe4e0 0, transparent 35%),
+        var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 24px;
+    }
+
+    .phone {
+      width: min(390px, 100%);
+      height: 820px;
+      background: linear-gradient(180deg, #fffaf3 0%, #f8eee3 100%);
+      border: 12px solid #2d2726;
+      border-radius: 48px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.25);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .screen { height: 100%; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+    .notch { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 116px; height: 28px; border-radius: 999px; background: #2d2726; z-index: 10; }
+
+    header { padding: 54px 24px 16px; display: flex; align-items: center; justify-content: space-between; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .logo-mark { width: 42px; height: 42px; border-radius: 16px; display: grid; place-items: center; background: linear-gradient(135deg, var(--accent), #f4d8b2); box-shadow: 0 8px 20px rgba(79,145,141,0.25); font-size: 23px; }
+    .brand h1 { margin: 0; font-size: 19px; line-height: 1; letter-spacing: -0.03em; }
+    .brand p { margin: 4px 0 0; font-size: 11px; color: var(--muted); }
+    .pill { border: 0; border-radius: 999px; padding: 9px 12px; background: #fff; color: var(--accent-dark); box-shadow: 0 8px 20px rgba(74, 54, 40, 0.08); font-weight: 700; font-size: 12px; cursor: pointer; }
+
+    main { flex: 1; overflow: hidden; position: relative; }
+    .page { display: none; height: 100%; overflow-y: auto; padding: 0 22px 104px; animation: fade .35s ease; }
+    .page.active { display: block; }
+    @keyframes fade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .hero { background: linear-gradient(180deg, rgba(255,255,255,0.74), rgba(255,255,255,0.38)), radial-gradient(circle at top right, rgba(143,199,195,0.45), transparent 45%), radial-gradient(circle at bottom left, rgba(216,168,90,0.25), transparent 45%); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+    .hero h2 { margin: 0; font-size: 30px; letter-spacing: -0.06em; max-width: 285px; line-height: 1.02; }
+    .hero p { margin: 12px 0 20px; color: var(--muted); font-size: 14px; line-height: 1.55; max-width: 275px; }
+
+    .cat-room { height: 300px; border-radius: 32px; background: radial-gradient(circle at 72% 21%, rgba(255, 242, 170, .96) 0 34px, transparent 35px), linear-gradient(180deg, #fff8ec 0%, #f7e0c3 56%, #e7bd8f 100%); position: relative; overflow: hidden; box-shadow: inset 0 -24px 70px rgba(158, 110, 68, 0.16), 0 18px 42px rgba(74,54,40,.1); border: 1px solid rgba(255,255,255,.75); }
+    .room-status { position: absolute; top: 14px; left: 14px; right: 14px; display: flex; justify-content: space-between; z-index: 8; pointer-events: none; }
+    .status-chip { background: rgba(255,255,255,.76); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,.7); border-radius: 999px; padding: 7px 10px; font-size: 11px; font-weight: 800; color: #6b564f; box-shadow: 0 8px 20px rgba(74,54,40,.08); }
+    .wall-art { position: absolute; top: 48px; left: 25px; width: 62px; height: 44px; border-radius: 16px; background: rgba(255,255,255,.58); box-shadow: 0 8px 20px rgba(74,54,40,.08); display: grid; place-items: center; font-size: 22px; }
+    .plant { position: absolute; left: 32px; bottom: 58px; width: 38px; height: 44px; border-radius: 0 0 14px 14px; background: #d7a367; z-index: 3; }
+    .plant:before, .plant:after { content: ""; position: absolute; bottom: 33px; width: 31px; height: 18px; border-radius: 50%; background: #84b98d; }
+    .plant:before { left: -17px; transform: rotate(-28deg); }
+    .plant:after { right: -17px; transform: rotate(28deg); }
+    .window { position: absolute; top: 46px; right: 22px; width: 94px; height: 108px; border-radius: 32px 32px 20px 20px; background: linear-gradient(#bfe7e4, #fff0c8); border: 7px solid rgba(255,255,255,0.88); box-shadow: 0 12px 30px rgba(79,145,141,0.2); overflow: hidden; }
+    .window:before, .window:after { content: ""; position: absolute; background: rgba(255,255,255,.7); }
+    .window:before { left: 50%; top: 0; width: 4px; height: 100%; transform: translateX(-50%); }
+    .window:after { left: 0; top: 48%; height: 4px; width: 100%; }
+    .rug { position: absolute; left: 58px; bottom: 20px; width: 222px; height: 64px; border-radius: 50%; background: radial-gradient(ellipse, rgba(143,199,195,.48), rgba(143,199,195,.12) 68%, transparent 70%); }
+    .floor-line { position: absolute; left: 0; right: 0; bottom: 70px; height: 1px; background: rgba(137, 91, 59, .14); }
+
+    .cat {
+      position: absolute;
+      left: 84px;
+      bottom: 46px;
+      width: 160px;
+      height: 152px;
+      transition: .45s cubic-bezier(.2,.8,.2,1);
+      filter: drop-shadow(0 24px 18px rgba(80,55,40,.22));
+      z-index: 7;
+      transform-style: preserve-3d;
+      perspective: 600px;
+    }
+
+    .cat::after {
+      content: "";
+      position: absolute;
+      left: 26px;
+      right: 18px;
+      bottom: -4px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(90, 55, 35, .14);
+      z-index: 0;
+    }
+
+    .cat-body {
+      position: absolute;
+      left: 28px;
+      bottom: 0;
+      width: 106px;
+      height: 96px;
+      border-radius: 55% 52% 42% 42% / 62% 62% 38% 38%;
+      background:
+        radial-gradient(circle at 32% 24%, rgba(255,226,190,.82) 0 16px, transparent 17px),
+        linear-gradient(145deg, #f3c18b 0%, #d58c56 58%, #a95d38 100%);
+      box-shadow:
+        inset -13px -15px 22px rgba(92,45,25,.2),
+        inset 12px 10px 18px rgba(255,240,213,.45);
+      z-index: 3;
+    }
+
+    .cat-body::before,
+    .cat-body::after {
+      content: "";
+      position: absolute;
+      top: 20px;
+      width: 18px;
+      height: 36px;
+      border-radius: 50%;
+      border-left: 4px solid rgba(116, 62, 39, .22);
+    }
+
+    .cat-body::before {
+      left: 14px;
+      transform: rotate(-18deg);
+    }
+
+    .cat-body::after {
+      right: 12px;
+      transform: scaleX(-1) rotate(-18deg);
+    }
+
+    .cat-belly {
+      position: absolute;
+      left: 26px;
+      bottom: 10px;
+      width: 54px;
+      height: 62px;
+      border-radius: 50% 50% 48% 48%;
+      background: radial-gradient(circle at 35% 26%, #fff8ec, #ffe3bf 72%);
+      box-shadow: inset -6px -8px 14px rgba(180,118,76,.12);
+      z-index: 2;
+    }
+
+    .cat-head {
+      position: absolute;
+      left: 31px;
+      top: 2px;
+      width: 96px;
+      height: 86px;
+      border-radius: 55% 55% 48% 48% / 62% 62% 44% 44%;
+      background:
+        radial-gradient(circle at 31% 23%, rgba(255,226,190,.85) 0 18px, transparent 19px),
+        linear-gradient(145deg, #f7c996 0%, #dd9b65 56%, #ad643c 100%);
+      box-shadow:
+        inset -10px -12px 20px rgba(93,45,25,.19),
+        inset 10px 9px 18px rgba(255,243,220,.48),
+        0 10px 18px rgba(95,56,35,.1);
+      transform-origin: bottom center;
+      transition: .45s ease;
+      z-index: 5;
+    }
+
+    .cat-head::before {
+      content: "";
+      position: absolute;
+      left: 43px;
+      top: 10px;
+      width: 10px;
+      height: 23px;
+      border-radius: 99px;
+      background: rgba(116, 62, 39, .22);
+      box-shadow:
+        -16px 5px 0 -2px rgba(116, 62, 39, .18),
+        16px 5px 0 -2px rgba(116, 62, 39, .18);
+    }
+
+    .ear {
+      position: absolute;
+      top: -13px;
+      width: 34px;
+      height: 35px;
+      background: linear-gradient(145deg,#e9a66f,#b96f44);
+      clip-path: polygon(50% 0, 5% 100%, 95% 100%);
+      z-index: -1;
+    }
+
+    .ear.left { left: 12px; transform: rotate(-19deg); }
+    .ear.right { right: 12px; transform: rotate(19deg); }
+    .ear:after { content:""; position:absolute; left:8px; top:10px; width:16px; height:17px; background:linear-gradient(145deg,#ffd1c5,#e9988c); clip-path: inherit; }
+
+    .eye {
+      position: absolute;
+      top: 39px;
+      width: 9px;
+      height: 12px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 28%, #fff 0 16%, #3b2f2f 18% 100%);
+      box-shadow: 0 2px 3px rgba(0,0,0,.12);
+      transition: .35s ease;
+    }
+
+    .eye.left { left: 30px; }
+    .eye.right { right: 30px; }
+
+    .cheek {
+      position: absolute;
+      top: 50px;
+      width: 16px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(236, 141, 121, .34);
+    }
+
+    .cheek.left { left: 17px; }
+    .cheek.right { right: 17px; }
+
+    .cheek::before,
+    .cheek::after {
+      content: "";
+      position: absolute;
+      width: 24px;
+      height: 1.5px;
+      border-radius: 99px;
+      background: rgba(96, 67, 53, .45);
+    }
+
+    .cheek.left::before { left: -24px; top: 2px; transform: rotate(8deg); }
+    .cheek.left::after { left: -23px; top: 8px; transform: rotate(-8deg); }
+    .cheek.right::before { right: -24px; top: 2px; transform: rotate(-8deg); }
+    .cheek.right::after { right: -23px; top: 8px; transform: rotate(8deg); }
+
+    .mouth {
+      position: absolute;
+      left: 50%;
+      top: 55px;
+      width: 20px;
+      height: 10px;
+      transform: translateX(-50%);
+      border-bottom: 2px solid #6b4b3d;
+      border-radius: 0 0 50% 50%;
+      transition: .25s ease;
+    }
+
+    .mouth::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: -5px;
+      width: 8px;
+      height: 6px;
+      transform: translateX(-50%);
+      border-radius: 50% 50% 60% 60%;
+      background: #7a4c3e;
+    }
+
+    .tail {
+      position: absolute;
+      right: -9px;
+      bottom: 20px;
+      width: 92px;
+      height: 78px;
+      border: 18px solid #bd7448;
+      border-left-color: transparent;
+      border-radius: 50%;
+      transform: rotate(28deg);
+      transform-origin: 35px 58px;
+      background: transparent;
+      box-shadow: inset -6px -6px 10px rgba(83,41,24,.14);
+      z-index: 1;
+    }
+
+    .paw {
+      position: absolute;
+      bottom: -2px;
+      width: 31px;
+      height: 16px;
+      border-radius: 50% 50% 42% 42%;
+      background: linear-gradient(145deg,#ce8656,#9b5534);
+      box-shadow:
+        inset -4px -4px 8px rgba(75,35,20,.14),
+        inset 4px 3px 7px rgba(255,211,170,.25);
+      z-index: 4;
+    }
+
+    .paw.left { left: 48px; }
+    .paw.right { left: 82px; }
+
+    .toy-yarn, .treat-bowl, .moon-blanket, .sparkles, .zzz, .heart-bubble { position: absolute; pointer-events: none; opacity: 0; z-index: 9; }
+    .toy-yarn { left: 31px; bottom: 58px; width: 40px; height: 40px; border-radius: 50%; background: repeating-radial-gradient(circle at center, #eeb5a3 0 3px, #c66f78 4px 6px); box-shadow: 0 12px 16px rgba(74,54,40,.14); }
+    .toy-yarn:after { content: ""; position: absolute; width: 48px; height: 20px; border-bottom: 3px solid #c66f78; border-radius: 50%; left: 30px; top: 19px; transform: rotate(12deg); }
+    .treat-bowl { right: 34px; bottom: 58px; width: 60px; height: 32px; border-radius: 9px 9px 26px 26px; background: linear-gradient(#9ed1cd, #579b97); box-shadow: 0 13px 16px rgba(74,54,40,.14); }
+    .treat-bowl:before { content: "cookie"; position: absolute; top: -22px; left: 10px; font-size: 12px; font-weight: 900; color: #7a4c3e; background: #f4d8b2; border-radius: 999px; padding: 4px 7px; }
+    .moon-blanket { left: 78px; bottom: 39px; width: 156px; height: 68px; border-radius: 42px 42px 24px 24px; background: linear-gradient(135deg, #d7eeea, #fff4d7); box-shadow: 0 16px 22px rgba(74,54,40,.12); z-index: 8; }
+    .moon-blanket:before { content: "moon"; position: absolute; right: 15px; top: 12px; color: #b4802f; font-size: 11px; font-weight: 900; text-transform: uppercase; }
+    .sparkles { left: 51px; top: 114px; right: 34px; height: 86px; font-size: 20px; }
+    .sparkles span { position: absolute; animation: sparkle .95s ease both; }
+    .sparkles span:nth-child(1) { left: 8px; top: 12px; }
+    .sparkles span:nth-child(2) { right: 8px; top: 28px; animation-delay:.12s; }
+    .sparkles span:nth-child(3) { left: 84px; bottom: 4px; animation-delay:.22s; }
+    .zzz { right: 90px; top: 116px; color: #6aa7a3; font-weight: 900; font-size: 16px; letter-spacing: 2px; }
+    .heart-bubble { left: 142px; top: 100px; font-size: 24px; }
+
+    .mood-line { margin: 12px 2px 0; padding: 13px 14px; border-radius: 22px; background: rgba(255,255,255,.68); border: 1px solid rgba(255,255,255,.75); color: #6e5b52; font-size: 13px; line-height: 1.45; box-shadow: 0 10px 24px rgba(74,54,40,.07); }
+    .cat.play { animation: catPlay 2.4s ease both; }
+    .cat.play .tail { animation: tailWag .42s ease 6; }
+    .cat.play .cat-head { animation: headBob .46s ease 5; }
+    .cat.feed { animation: catFeed 2.6s ease both; }
+    .cat.feed .mouth { border-bottom-width: 3px; transform: translateX(-50%) scaleX(1.25); }
+    .cat.feed .tail { transform: rotate(42deg); }
+    .cat.sleep { animation: catSleep 3.2s ease both; }
+    .cat.sleep .eye { height: 2px; top: 43px; border-radius: 99px; }
+    .cat.sleep .cat-head { transform: rotate(-7deg) translateY(3px); }
+    .room-playing .toy-yarn { opacity: 1; animation: yarnRoll 2.4s ease both; }
+    .room-playing .sparkles, .room-feeding .sparkles { opacity: 1; }
+    .room-feeding .treat-bowl { opacity: 1; animation: bowlPop 2.6s ease both; }
+    .room-sleeping .moon-blanket { opacity: 1; animation: blanketIn 3.2s ease both; }
+    .room-sleeping .zzz { opacity: 1; animation: zzzFloat 3.2s ease both; }
+    .room-loved .heart-bubble { opacity: 1; animation: heartFloat 2.8s ease both; }
+
+    @keyframes catPlay { 0% { transform: translate(0,0) rotateY(0deg) rotate(0); } 18% { transform: translate(-34px,-18px) rotateY(-12deg) rotate(-8deg); } 38% { transform: translate(18px,-10px) rotateY(14deg) rotate(8deg); } 58% { transform: translate(-18px,-16px) rotateY(-8deg) rotate(-5deg); } 78% { transform: translate(8px,-8px) rotateY(8deg) rotate(4deg); } 100% { transform: translate(0,0) rotateY(0deg) rotate(0); } }
+    @keyframes catFeed { 0% { transform: translate(0,0) rotate(0); } 20% { transform: translate(56px, 2px) rotate(2deg); } 36% { transform: translate(56px, 2px) rotate(0) scale(1.02); } 52% { transform: translate(56px, 2px) rotate(0) scale(.99); } 70% { transform: translate(56px, 2px) rotate(0) scale(1.02); } 86% { transform: translate(28px, 1px) rotate(-1deg); } 100% { transform: translate(0,0) rotate(0); } }
+    @keyframes catSleep { 0% { transform: translate(0,0) rotate(0) scale(1); } 22% { transform: translate(-7px, 11px) rotate(-4deg) scale(.98); } 48% { transform: translate(-8px, 13px) rotate(-5deg) scale(.97); } 74% { transform: translate(-7px, 11px) rotate(-4deg) scale(.98); } 100% { transform: translate(0,0) rotate(0) scale(1); } }
+    @keyframes tailWag { 0%,100% { transform: rotate(28deg); } 50% { transform: rotate(48deg); } }
+    @keyframes headBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px) rotate(-2deg); } }
+    @keyframes yarnRoll { 0% { transform: translateX(-32px) rotate(0); opacity: 0; } 12% { opacity: 1; } 35% { transform: translateX(92px) rotate(360deg); opacity: 1; } 58% { transform: translateX(34px) translateY(-8px) rotate(560deg); opacity: 1; } 82% { transform: translateX(108px) rotate(760deg); opacity: 1; } 100% { transform: translateX(62px) rotate(920deg); opacity: 0; } }
+    @keyframes bowlPop { 0% { transform: translateY(14px) scale(.65); opacity: 0; } 12% { transform: translateY(0) scale(1.08); opacity: 1; } 28% { transform: translateY(0) scale(1); opacity: 1; } 58% { transform: translateY(-3px) scale(1.03); opacity: 1; } 82% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(12px) scale(.75); opacity: 0; } }
+    @keyframes blanketIn { 0% { transform: translateY(32px) scale(.9); opacity: 0; } 16% { opacity: 1; transform: translateY(0) scale(1); } 72% { opacity: 1; transform: translateY(0) scale(1.01); } 100% { opacity: 0; transform: translateY(12px) scale(.96); } }
+    @keyframes zzzFloat { 0% { transform: translateY(20px) scale(.85); opacity: 0; } 18% { opacity: 1; } 52% { transform: translateY(-8px) scale(1); opacity: 1; } 100% { transform: translateY(-40px) scale(1.18); opacity: 0; } }
+    @keyframes sparkle { 0% { transform: scale(.2) translateY(10px); opacity: 0; } 40% { opacity: 1; } 100% { transform: scale(1.2) translateY(-14px); opacity: 0; } }
+    @keyframes heartFloat { 0% { transform: translateY(16px) scale(.7); opacity: 0; } 18% { opacity: 1; } 45% { transform: translateY(-18px) scale(1.08); opacity: 1; } 72% { transform: translateY(-32px) scale(1.18); opacity: .9; } 100% { transform: translateY(-48px) scale(1.25); opacity: 0; } }
+
+    .actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; margin-top: 14px; }
+    .action { border: 0; border-radius: 20px; padding: 12px 6px; background: rgba(255,255,255,0.88); box-shadow: 0 10px 24px rgba(74,54,40,.08); color: var(--ink); font-weight: 800; cursor: pointer; transition: .22s ease; text-align: center; }
+    .action:hover { transform: translateY(-2px); box-shadow: 0 14px 28px rgba(74,54,40,.12); }
+    .action:active { transform: scale(.97); }
+    .action span { display: block; font-size: 22px; margin-bottom: 4px; }
+
+    .card { background: var(--card); border: 1px solid rgba(255,255,255,0.7); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); margin-top: 16px; }
+    .card h3 { margin: 0 0 8px; font-size: 18px; letter-spacing: -0.03em; }
+    .card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+    .memory-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+    .memory { min-height: 128px; border-radius: 24px; padding: 14px; background: linear-gradient(135deg, #fff, #f8e1c8); box-shadow: 0 12px 28px rgba(74,54,40,.08); display: flex; flex-direction: column; justify-content: flex-end; cursor: pointer; transition: .22s ease; }
+    .memory:hover { transform: translateY(-3px); }
+    .memory:nth-child(2) { background: linear-gradient(135deg, #fff, #d6eeea); }
+    .memory:nth-child(3) { background: linear-gradient(135deg, #fff, #efd6d0); }
+    .memory:nth-child(4) { background: linear-gradient(135deg, #fff, #eadfbf); }
+    .memory strong { font-size: 14px; }
+    .memory small { color: var(--muted); margin-top: 4px; }
+    .field, .textarea { margin-top: 10px; width: 100%; padding: 12px; border-radius: 14px; border: 1px solid #ddd; font-size: 14px; background: #fff; color: var(--ink); outline: none; font-family: inherit; }
+    .textarea { min-height: 78px; resize: none; }
+    .field:focus, .textarea:focus { border-color: var(--accent-dark); box-shadow: 0 0 0 3px rgba(143,199,195,.22); }
+    .memory-preview { margin-top: 14px; border-radius: 22px; padding: 16px; background: #fff; box-shadow: 0 12px 25px rgba(74,54,40,.08); min-height: 84px; }
+    .memory-preview strong { display:block; margin-bottom:5px; }
+    .memory-preview p { margin:0; color:var(--muted); font-size:13px; line-height:1.5; }
+    .message { margin-top: 14px; border-radius: 24px; padding: 16px; background: #fff; box-shadow: 0 12px 25px rgba(74,54,40,.08); }
+    .message strong { display: block; margin-bottom: 5px; }
+    .message p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .companion-card { border-radius: 26px; padding: 18px; background: linear-gradient(135deg, #ffffff, #e6f4f2); box-shadow: var(--shadow); margin-top: 16px; text-align: center; }
+    .companion-avatar { width: 86px; height: 86px; margin: 0 auto 10px; border-radius: 30px; display: grid; place-items: center; font-size: 48px; background: #fff5e7; box-shadow: 0 16px 28px rgba(74,54,40,.1); }
+    .companion-card h3 { margin:0; }
+    .companion-card p { margin:8px 0 0; color:var(--muted); font-size:13px; line-height:1.55; }
+    .quick-replies { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; }
+    .map-wrap { margin-top: 10px; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); background: #e8ddd1; }
+    .map-wrap iframe { width: 100%; height: 180px; border: 0; display: block; }
+    .service-options { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+    .cta { width: 100%; border: 0; border-radius: 22px; padding: 16px; background: linear-gradient(135deg, var(--accent-dark), var(--accent)); color: white; font-weight: 900; font-size: 15px; box-shadow: 0 16px 30px rgba(79,145,141,.28); cursor: pointer; margin-top: 14px; }
+    .toast { position: absolute; left: 22px; right: 22px; bottom: 96px; border-radius: 22px; background: rgba(45,39,38,0.9); color: white; padding: 14px 16px; font-size: 13px; transform: translateY(20px); opacity: 0; pointer-events: none; transition: .3s ease; z-index: 20; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .intro-banner { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; z-index: 50; opacity: 1; transition: opacity 1.2s ease, visibility 1.2s ease; visibility: visible; pointer-events: auto; }
+    .intro-banner.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+    .intro-card { background: white; padding: 20px 24px; border-radius: 20px; text-align: center; font-weight: 700; box-shadow: 0 20px 50px rgba(0,0,0,0.2); max-width: 260px; line-height: 1.45; }
+    nav { position: absolute; left: 14px; right: 14px; bottom: 14px; height: 76px; border-radius: 30px; background: rgba(255,255,255,0.82); backdrop-filter: blur(16px); box-shadow: 0 12px 34px rgba(74,54,40,.18); display: grid; grid-template-columns: repeat(4, 1fr); padding: 8px; z-index: 30; }
+    .tab { border: 0; background: transparent; border-radius: 22px; color: var(--muted); font-size: 11px; font-weight: 800; cursor: pointer; }
+    .tab span { display: block; font-size: 20px; margin-bottom: 3px; }
+    .tab.active { background: #f3ebe0; color: var(--ink); }
+    .logo-reveal { text-align: center; padding: 22px 8px 4px; }
+    .big-logo { width: 82px; height: 82px; margin: 0 auto 12px; border-radius: 28px; display: grid; place-items: center; font-size: 42px; background: linear-gradient(135deg, var(--accent), #f4d8b2); box-shadow: 0 18px 40px rgba(79,145,141,0.26); }
+    .logo-reveal h2 { margin: 0; font-size: 28px; letter-spacing: -0.06em; }
+    .logo-reveal p { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <div class="screen">
+      <div class="notch"></div>
+      <header>
+        <div class="brand"><div class="logo-mark">🍃</div><div><h1>Back to Leaf</h1><p>they are never left</p></div></div>
+        <button class="pill" type="button" onclick="showToast('Mimi says: meow~')">🔔 1</button>
+      </header>
+
+      <main>
+        <section class="page active" id="home">
+          <div class="hero">
+            <h2>A gentle place for love after goodbye.</h2>
+            <p>Pet water cremation, memory keeping, and a soft digital companion inspired by everyday little moments.</p>
+            <div class="cat-room" id="catRoom">
+              <div class="room-status"><div class="status-chip" id="moodChip">Mimi · Calm</div><div class="status-chip">☀️ Cozy room</div></div>
+              <div class="wall-art">🍃</div><div class="plant"></div><div class="window"></div><div class="rug"></div><div class="floor-line"></div>
+              <div class="toy-yarn"></div><div class="treat-bowl"></div><div class="moon-blanket"></div><div class="sparkles"><span>✦</span><span>♡</span><span>✧</span></div><div class="zzz">Zzz</div><div class="heart-bubble">💗</div>
+              <div class="cat" id="cat"><div class="tail"></div><div class="cat-body"></div><div class="cat-belly"></div><div class="paw left"></div><div class="paw right"></div><div class="cat-head"><div class="ear left"></div><div class="ear right"></div><div class="eye left"></div><div class="eye right"></div><div class="cheek left"></div><div class="cheek right"></div><div class="mouth"></div></div></div>
+            </div>
+            <div class="mood-line" id="moodLine">Mimi is resting by the warm window. Try sending a small interaction.</div>
+            <div class="actions">
+              <button class="action" type="button" onclick="catAction('play')"><span>🧶</span>Play</button>
+              <button class="action" type="button" onclick="catAction('feed')"><span>🍪</span>Treat</button>
+              <button class="action" type="button" onclick="catAction('sleep')"><span>🌙</span>Rest</button>
+              <button class="action" type="button" onclick="catAction('love')"><span>💗</span>Love</button>
+            </div>
+          </div>
+          <div class="card"><h3>Today's memory</h3><p id="todayMemory">"Mimi used to wait beside the door every evening. Today, a small reminder appears softly - not to replace, but to remember."</p></div>
+        </section>
+
+        <section class="page" id="memories">
+          <div class="card"><h3>Memory Garden</h3><p>Save moments and tap each memory card to preview the story.</p><input class="field" id="memoryTitle" placeholder="Memory title, e.g. First day home"><textarea class="textarea" id="memoryText" placeholder="Write a short memory..."></textarea><button class="cta" type="button" onclick="addMemory()">Add a memory</button></div>
+          <div class="memory-grid" id="memoryGrid">
+            <div class="memory" onclick="previewMemory('First day home','Mimi came home in a small towel and kept hiding behind the sofa.')"><strong>First day home</strong><small>12 photos</small></div>
+            <div class="memory" onclick="previewMemory('Favourite sound','A soft meow recorded from the evening when Mimi wanted snacks.')"><strong>Favourite sound</strong><small>meow recording</small></div>
+            <div class="memory" onclick="previewMemory('Last goodbye','A private message saved for the farewell moment.')"><strong>Last goodbye</strong><small>private note</small></div>
+            <div class="memory" onclick="previewMemory('Rainbow day','A memorial date to remember love in a softer way.')"><strong>Rainbow day</strong><small>memorial date</small></div>
+          </div>
+          <div class="memory-preview" id="memoryPreview"><strong>Tap a memory</strong><p>Your selected memory will appear here.</p></div>
+        </section>
+
+        <section class="page" id="companion">
+          <div class="companion-card"><div class="companion-avatar" id="companionAvatar">🐱</div><h3>Mimi Companion</h3><p id="companionMood">Mimi feels calm today. Send a message or choose a quick action.</p></div>
+          <div class="card"><h3>Talk to Mimi</h3><input class="field" id="chatInput" placeholder="Type something to Mimi..."><button class="cta" type="button" onclick="sendMessage()">Send Message</button></div>
+          <div class="quick-replies"><button class="action" type="button" onclick="companionReply('miss')">I miss you</button><button class="action" type="button" onclick="companionReply('sleep')">Good night</button><button class="action" type="button" onclick="companionReply('memory')">Show memory</button><button class="action" type="button" onclick="companionReply('meow')">Play meow</button></div>
+          <div id="chatLog"><div class="message"><strong>From Mimi 🐱</strong><p>I found a sunny spot today. Don't forget to rest too.</p></div></div>
+        </section>
+
+        <section class="page" id="service">
+          <div class="card"><h3>Book a Gentle Farewell</h3><p>Schedule a respectful water cremation service with us. Choose your preferred time, location, and service type.</p></div>
+          <div class="card"><h3>Service Location</h3><div class="map-wrap"><iframe src="https://maps.google.com/maps?q=Johor%20Bahru&t=&z=13&ie=UTF8&iwloc=&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div><p style="margin-top:10px; font-size:12px; color:var(--muted);">Serving Johor Bahru & nearby areas</p></div>
+          <div class="card"><h3>Select Service</h3><div class="service-options"><button class="action" type="button" onclick="selectService(this)">Private Aquamation</button><button class="action" type="button" onclick="selectService(this)">Communal Aquamation</button><button class="action" type="button" onclick="selectService(this)">Memorial Package</button></div></div>
+          <div class="card"><h3>Pick a Date</h3><input class="field" type="date" /></div>
+          <div class="card"><h3>Contact Details</h3><input class="field" type="text" placeholder="Your Name" /><input class="field" type="tel" placeholder="Phone Number" /></div>
+          <button class="cta" type="button" onclick="showToast('Booking request submitted')">Confirm Booking</button>
+          <div class="logo-reveal"><div class="big-logo">🍃</div><h2>Back to Leaf</h2><p>We don't just say goodbye.<br/>They are always by your side.</p></div>
+        </section>
+      </main>
+
+      <div class="toast" id="toast">Action completed</div>
+      <div class="intro-banner" id="banner"><div class="intro-card">they are never left,<br />they are always by your side</div></div>
+      <nav><button class="tab active" type="button" onclick="openPage('home', this)"><span>🏠</span>Home</button><button class="tab" type="button" onclick="openPage('memories', this)"><span>🌷</span>Memory</button><button class="tab" type="button" onclick="openPage('companion', this)"><span>🐱</span>Companion</button><button class="tab" type="button" onclick="openPage('service', this)"><span>💧</span>Care</button></nav>
+    </div>
+  </div>
+
+  <script>
+    function openPage(id, btn) {
+      document.querySelectorAll('.page').forEach(function(page) { page.classList.remove('active'); });
+      document.getElementById(id).classList.add('active');
+      document.querySelectorAll('.tab').forEach(function(tab) { tab.classList.remove('active'); });
+      btn.classList.add('active');
+    }
+
+    function showToast(text) {
+      const toast = document.getElementById('toast');
+      toast.textContent = text;
+      toast.classList.add('show');
+      setTimeout(function() { toast.classList.remove('show'); }, 1800);
+    }
+
+    function selectService(button) {
+      document.querySelectorAll('.service-options .action').forEach(function(option) { option.style.background = 'rgba(255,255,255,0.86)'; option.style.color = 'var(--ink)'; });
+      button.style.background = 'linear-gradient(135deg, var(--accent-dark), var(--accent))';
+      button.style.color = '#fff';
+      showToast(button.textContent.trim() + ' selected');
+    }
+
+    function catAction(type) {
+      const cat = document.getElementById('cat');
+      const room = document.getElementById('catRoom');
+      const moodLine = document.getElementById('moodLine');
+      const moodChip = document.getElementById('moodChip');
+      cat.className = 'cat';
+      room.classList.remove('room-playing', 'room-feeding', 'room-sleeping', 'room-loved');
+      void cat.offsetWidth;
+      const settings = {
+        play: { catClass: 'cat play', roomClass: 'room-playing', chip: 'Mimi · Playful', line: 'Mimi chased the yarn across the room. A tiny happy moment has been saved.', toast: 'Mimi is playing with the yarn 🧶' },
+        feed: { catClass: 'cat feed', roomClass: 'room-feeding', chip: 'Mimi · Happy', line: 'Mimi enjoyed a little treat. This interaction feels warmer and more alive now.', toast: 'Mimi enjoyed the little treat 🍪' },
+        sleep: { catClass: 'cat sleep', roomClass: 'room-sleeping', chip: 'Mimi · Sleepy', line: 'Mimi curled up under the soft blanket. The room becomes quiet and peaceful.', toast: 'Mimi is resting by the window 🌙' },
+        love: { catClass: 'cat play', roomClass: 'room-loved', chip: 'Mimi · Loved', line: 'Mimi feels your love. A soft heartbeat memory has been added.', toast: 'Mimi feels loved 💗' }
+      };
+      const selected = settings[type];
+      cat.className = selected.catClass;
+      room.classList.add(selected.roomClass);
+      moodChip.textContent = selected.chip;
+      moodLine.textContent = selected.line;
+      showToast(selected.toast);
+      setTimeout(function() { cat.className = 'cat'; room.classList.remove(selected.roomClass); }, type === 'sleep' ? 3300 : 2800);
+    }
+
+    function previewMemory(title, text) {
+      document.getElementById('memoryPreview').innerHTML = '<strong>' + title + '</strong><p>' + text + '</p>';
+      document.getElementById('todayMemory').textContent = '"' + text + '"';
+      showToast('Memory opened 🌷');
+    }
+
+    function addMemory() {
+      const titleInput = document.getElementById('memoryTitle');
+      const textInput = document.getElementById('memoryText');
+      const title = titleInput.value.trim() || 'New memory';
+      const text = textInput.value.trim() || 'A small moment saved in the memory garden.';
+      const grid = document.getElementById('memoryGrid');
+      const item = document.createElement('div');
+      item.className = 'memory';
+      item.innerHTML = '<strong>' + title + '</strong><small>just added</small>';
+      item.onclick = function() { previewMemory(title, text); };
+      grid.prepend(item);
+      previewMemory(title, text);
+      titleInput.value = '';
+      textInput.value = '';
+      showToast('Memory added 🌷');
+    }
+
+    function addChat(sender, text) {
+      const log = document.getElementById('chatLog');
+      const box = document.createElement('div');
+      box.className = 'message';
+      box.innerHTML = '<strong>' + sender + '</strong><p>' + text + '</p>';
+      log.prepend(box);
+    }
+
+    function companionReply(type) {
+      const replies = {
+        miss: 'I know. I am still in your memories, quietly staying near you.',
+        sleep: "Good night. I will rest by the window and wait for tomorrow's sunlight.",
+        memory: 'Remember the day I ran to the door when you came home? That was one of my happiest moments.',
+        meow: 'Meow~ I am here, in a softer way.'
+      };
+      document.getElementById('companionMood').textContent = replies[type];
+      document.getElementById('companionAvatar').textContent = type === 'sleep' ? '😺' : '🐱';
+      addChat('From Mimi 🐱', replies[type]);
+      showToast(type === 'meow' ? 'Meow played 🔊' : 'Mimi replied 🐱');
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text) { showToast('Write something first'); return; }
+      addChat('You', text);
+      input.value = '';
+      setTimeout(function() { companionReply('miss'); }, 350);
+    }
+
+    window.addEventListener('DOMContentLoaded', function() {
+      const banner = document.getElementById('banner');
+      if (!banner) return;
+      setTimeout(function() { banner.classList.add('hide'); setTimeout(function() { banner.remove(); }, 1300); }, 1800);
+    });
+  </script>
+</body>
+</html>
