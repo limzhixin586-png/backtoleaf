@@ -1314,7 +1314,7 @@
           </div>
           <div><h1>Back to Leaf</h1><p>they are never left</p></div>
         </div>
-        <button class="pill" type="button" aria-label="Open Mimi notification" onclick="showToast('Mimi says: meow~')"><svg class="ui-icon" aria-hidden="true"><use href="#icon-bell"></use></svg><span>1</span></button>
+        <button class="pill" type="button" aria-label="Open Mimi notification" onclick="playMimiSound('notify'); showToast('Mimi says: meow~')"><svg class="ui-icon" aria-hidden="true"><use href="#icon-bell"></use></svg><span>1</span></button>
       </header>
 
       <main>
@@ -1391,6 +1391,8 @@
 
   <script>
     let toastTimer;
+    const mimiAudioTracks = {};
+    let lastMimiSoundAt = 0;
 
     function escapeHtml(value) {
       return String(value).replace(/[&<>"']/g, function(character) {
@@ -1402,6 +1404,40 @@
           "'": '&#039;'
         }[character];
       });
+    }
+
+    function playMimiSound(type) {
+      const nowMs = performance.now();
+      if (nowMs - lastMimiSoundAt < 220) return;
+      lastMimiSoundAt = nowMs;
+
+      const persianSoundButtons = ['feed', 'love', 'meow', 'notify'];
+      const source = persianSoundButtons.includes(type)
+        ? 'assets/persian-meow-3s.mp3'
+        : 'assets/mimi-meow-3s.mp3';
+
+      if (!mimiAudioTracks[source]) {
+        mimiAudioTracks[source] = new Audio(source);
+        mimiAudioTracks[source].preload = 'auto';
+      }
+      const audio = mimiAudioTracks[source];
+
+      const volume = {
+        notify: 0.46,
+        send: 0.48,
+        sleep: 0.42,
+        miss: 0.52,
+        love: 0.54,
+        memory: 0.5,
+        play: 0.56,
+        feed: 0.56,
+        meow: 0.58
+      }[type] || 0.54;
+
+      audio.pause();
+      audio.currentTime = 0;
+      audio.volume = volume;
+      audio.play().catch(function() {});
     }
 
     function openPage(id, btn) {
@@ -1457,6 +1493,7 @@
       room.classList.add(selected.roomClass);
       moodChip.textContent = selected.chip;
       moodLine.textContent = selected.line;
+      playMimiSound(type);
       showToast(selected.toast);
       const resetDelay = { play: 3700, feed: 3900, sleep: 4300, love: 3700 }[type] || 3600;
       setTimeout(function() { cat.className = 'cat'; room.classList.remove(selected.roomClass); }, resetDelay);
@@ -1500,6 +1537,7 @@
         memory: 'Remember the day I ran to the door when you came home? That was one of my happiest moments.',
         meow: 'Meow~ I am here, in a softer way.'
       };
+      playMimiSound(type);
       document.getElementById('companionMood').textContent = replies[type];
       document.getElementById('companionAvatar').textContent = type === 'sleep' ? '😺' : '🐱';
       addChat('From Mimi 🐱', replies[type]);
@@ -1511,6 +1549,7 @@
       const text = input.value.trim();
       if (!text) { showToast('Write something first'); return; }
       addChat('You', text);
+      playMimiSound('send');
       input.value = '';
       setTimeout(function() { companionReply('miss'); }, 350);
     }
